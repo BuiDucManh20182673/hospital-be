@@ -9,6 +9,6 @@ import java.util.List;
 public interface ResultRepository extends JpaRepository<Result, Long> {
     Result findResultById(long id);
 
-    @Query("SELECT r FROM Result r JOIN r.order o JOIN o.patient p WHERE p.id = ?1")
+    @Query("SELECT r FROM Result r JOIN r.order o JOIN o.patient p WHERE p.id = ?1 AND o.status='DONE'")
     List<Result> getHealthRecord(long userId);
 }

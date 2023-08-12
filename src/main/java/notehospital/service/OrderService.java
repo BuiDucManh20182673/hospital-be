@@ -74,7 +74,7 @@ public class OrderService {
     }
 
     public List<Order> getOrder(){
-        List<Order> orders = orderRepository.findAll();
+        List<Order> orders = orderRepository.findAll();//findAllConfirm
         return orders;
     }
 

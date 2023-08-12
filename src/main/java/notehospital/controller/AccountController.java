@@ -5,6 +5,7 @@ import javax.validation.Valid;
 
 import notehospital.dto.request.*;
 import notehospital.dto.response.AccountResponseDTO;
+import notehospital.dto.response.ResponseDTO;
 import notehospital.entity.Account;
 import notehospital.entity.Medicine;
 import notehospital.enums.AccountStatus;
@@ -21,7 +22,7 @@ import java.util.List;
 
 @RestController
 @SecurityRequirement(name = "api")
-@CrossOrigin(origins = "https://hospital-be.vercel.app/")
+@CrossOrigin(origins = {"https://hospital-be.vercel.app/", "http://localhost:3000/"})
 public class AccountController {
 
     @Autowired
@@ -62,6 +63,8 @@ public class AccountController {
 
     @PutMapping("/password/{userId}")
     public ResponseEntity updatePassword(@RequestBody UpdatePassword updatePassword, @PathVariable long userId){
+        System.out.println(updatePassword);
+        System.out.println(userId);
         AccountResponseDTO accountResponseDTO = accountService.updatePassword(userId, updatePassword);
         return responseHandler.response(200,"Successfully update password!",accountResponseDTO);
     }
@@ -88,5 +91,16 @@ public class AccountController {
     public ResponseEntity resetPassword(@PathVariable long accountId, @RequestBody ResetPassword resetPassword){
         Account account = accountService.resetPassword(resetPassword, accountId);
         return responseHandler.response(200,"Successfully reset password!", account);
+    }
+
+    @GetMapping("/check-user/{phone}")
+    public ResponseEntity checkPhoneExist(@PathVariable String phone){
+        System.out.println(phone);
+        Account account = accountService.getAccountByPhone(phone);
+        if (account==null){
+            System.out.println("đã vào đây");
+            return ResponseEntity.ok(new ResponseDTO(200, "available"));
+        }
+        return responseHandler.response(200,"Số điện thoại đã tồn tại",account);
     }
 }
