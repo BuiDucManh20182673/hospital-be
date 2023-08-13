@@ -39,13 +39,14 @@ public class OrderService {
 
     @Autowired
     MedicineRepository medicineRepository;
-    public Order createOrder(OrderRequest orderRequest){
+
+    public Order createOrder(OrderRequest orderRequest) {
         Order neworder = new Order();
         Order order = orderRepository.save(neworder);
         Set<Result> results = new HashSet<>();
         Account doctor = accountRepository.findAccountById(orderRequest.getDoctorId());
         Account patient = accountRepository.findAccountById(orderRequest.getPatientId());
-        for(long serviceId: orderRequest.getServices()){
+        for (long serviceId : orderRequest.getServices()) {
             notehospital.entity.Service service = serviceRepository.findServiceById(serviceId);
             Result result = new Result();
             result.setService(service);
@@ -62,48 +63,61 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    public List<Order> getOrderHistory(long userId){
+    public List<Order> getOrderHistory(long userId) {
         Account account = accountRepository.findAccountById(userId);
         List<Order> orders = orderRepository.findOrdersByPatient(account);
         return orders;
     }
 
-    public Order getOrderDetail(long orderId){
+    public Order getOrderDetail(long orderId) {
         Order order = orderRepository.findOrderById(orderId);
         return order;
     }
 
-    public List<Order> getOrder(){
+    public List<Order> getOrder() {
         List<Order> orders = orderRepository.findAll();//findAllConfirm
         return orders;
     }
 
-    public Order updateStatusOrder(long orderId, OrderStatus accountStatus){
+    public Order updateStatusOrder(long orderId, OrderStatus accountStatus) {
         Order order = orderRepository.findOrderById(orderId);
         order.setStatus(accountStatus);
         return orderRepository.save(order);
     }
 
-    public List<Order> getDoctorSchedule(long doctorId){
+    public List<Order> getDoctorSchedule(long doctorId) {
         Account account = accountRepository.findAccountById(doctorId);
         List<Order> orders = orderRepository.findOrdersByDoctorAndStatus(account, OrderStatus.IN_PROCESS);
         return orders;
     }
 
-    public Order createPrescription(long orderId, CreatePrescriptionRequest createPrescriptionRequest){
+    public Order createPrescription(long orderId, CreatePrescriptionRequest createPrescriptionRequest) {
         Order order = orderRepository.findOrderById(orderId);
-        Prescription prescription = new Prescription();
-        prescription.setOrder(order);
-        prescription = prescriptionRepository.save(prescription);
-        order.setPrescription(prescription);
-        order = orderRepository.save(order);
-        for(PrescriptionItemRequest prescriptionItem: createPrescriptionRequest.getPrescriptionItems()){
+
+        if(order.getPrescription() == null){
+            Prescription prescription = new Prescription();
+            prescription.setOrder(order);
+            prescription = prescriptionRepository.save(prescription);
+            order.setPrescription(prescription);
+            order = orderRepository.save(order);
+        }
+
+        if (order.getPrescription() != null && order.getPrescription().getPrescriptionItems() != null &&
+                order.getPrescription().getPrescriptionItems().size() > 0
+        ) {
+            for(PrescriptionItem prescriptionItem: order.getPrescription().getPrescriptionItems()){
+                prescriptionItem.setDeleted(true);
+                prescriptionItemRepository.save(prescriptionItem);
+            }
+        }
+
+        for (PrescriptionItemRequest prescriptionItem : createPrescriptionRequest.getPrescriptionItems()) {
             Medicine medicine = medicineRepository.findMedicineById(prescriptionItem.getMedicineId());
             PrescriptionItem newItem = new PrescriptionItem();
             newItem.setTimes(prescriptionItem.getTimes());
             newItem.setQuantity(prescriptionItem.getQuantity());
             newItem.setMedicine(medicine);
-            newItem.setPrescription(prescription);
+            newItem.setPrescription(order.getPrescription());
             prescriptionItemRepository.save(newItem);
         }
 
@@ -111,8 +125,8 @@ public class OrderService {
         return newOrder;
     }
 
-    public Order createResult(long orderId, List<ResultRequest> results){
-        for(ResultRequest result: results){
+    public Order createResult(long orderId, List<ResultRequest> results) {
+        for (ResultRequest result : results) {
             Result result1 = resultRepository.findResultById(result.getId());
             result1.setLevel(result.getLevel());
             result1.setValue(result.getValue());
@@ -123,7 +137,7 @@ public class OrderService {
         return orderRepository.findOrderById(orderId);
     }
 
-    public List<Result> getHealthRecord(long userId){
+    public List<Result> getHealthRecord(long userId) {
         List<Result> results = resultRepository.getHealthRecord(userId);
         return results;
     }

@@ -23,6 +23,8 @@ public class PrescriptionItem {
     private String times;
     private int quantity;
 
+    private boolean isDeleted = false;
+
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "prescription_id")
